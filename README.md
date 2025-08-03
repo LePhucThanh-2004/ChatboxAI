@@ -51,5 +51,5 @@ pip install -r requirements.txt
 cd frontend
 python -m http.server 8080
 ```
-- Access: http://localhost:8080
+- Access: http://localhost:8081
 - Currently API upload file have issue CORS temporary, we must use extension `Allow CORS: Access-Control-Allow-Origin` to test and work in local

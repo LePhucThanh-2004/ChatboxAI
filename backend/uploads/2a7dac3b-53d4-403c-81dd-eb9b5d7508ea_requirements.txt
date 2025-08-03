@@ -13,4 +13,3 @@ requests
 PyPDF2
 psycopg2-binary
 python-multipart
-python-dotenv
