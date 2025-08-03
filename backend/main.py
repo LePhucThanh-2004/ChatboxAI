@@ -11,6 +11,7 @@ from docx import Document
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 from database import create_note, init_db_tables
+
 from dotenv import load_dotenv
 import os
 
@@ -78,10 +79,10 @@ init_db_tables()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # hoặc thay * bằng domain frontend nếu muốn bảo mật hơn
-    allow_credentials=True,
+    allow_origins=[os.getenv("FRONTEND_ORIGIN", "http://localhost:8080")],  # Use env or default
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,  # Only if you need cookies/auth headers
 )
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -96,7 +97,7 @@ model = SentenceTransformer(MODEL_NAME)
 # Initialize FastAPI logger
 logger = logging.getLogger("fastapi")  # Use FastAPI's logger
 
-COLLECTION_NAME = os.getenv("QDRANT_COLLECTION")
+COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "documents_v6")
 VECTOR_SIZE = int(os.getenv("VECTOR_SIZE", 384))
 VECTOR_NAME = os.getenv("VECTOR_NAME", "vector")  # Explicit vector name for Qdrant
 from qdrant_client.models import VectorParams, Distance
@@ -214,14 +215,11 @@ async def upload_file(file: UploadFile = File(...)):
 async def ask_question(payload: dict):
     try:
         question = payload.get("text", "")
-        print(f"Received question: {question}")
         if not question.strip():
             raise HTTPException(status_code=400, detail="Câu hỏi không được để trống.")
 
         # Encode the question
         q_vector = model.encode([question])[0].tolist()
-        print(f"Encoded question vector: {q_vector}")   
-        
 
         # Search for relevant chunks in Qdrant
         hits = qdrant.search(
@@ -229,7 +227,7 @@ async def ask_question(payload: dict):
             query_vector=(VECTOR_NAME, q_vector),  # Use correct vector name
             limit=5
         )
-        print(f"Search hits: {hits}")
+        logger.info(f"Found {len(hits)} relevant chunks for question: {question}")
         if not hits:
             logger.info(f"No relevant chunks found for question: {question}")
             return {"reply": "Không tìm thấy thông tin liên quan trong tài liệu."}
@@ -238,39 +236,16 @@ async def ask_question(payload: dict):
         context = "\n".join([hit.payload["text"] for hit in hits])
         prompt = f"Dựa trên các đoạn sau, hãy trả lời câu hỏi một cách chính xác và ngắn gọn nhất.\n{context}\nCâu hỏi: {question}\nTrả lời:"
 
-        # # Query the language model using Ollama
-        # res = requests.post(
-        #     "http://localhost:11434/api/generate",
-        #     json={"model": "llama3", "prompt": prompt},
-        #     stream=True
-        # )
-        # res.raise_for_status()
-
-        # # Process streaming response
-        # answer = ""
-        # for line in res.iter_lines():
-        #     if line:
-        #         try:
-        #             json_line = json.loads(line.decode("utf-8"))
-        #             if "response" in json_line:
-        #                 answer += json_line["response"]
-        #             if json_line.get("done", False):
-        #                 break
-        #         except json.JSONDecodeError:
-        #             logger.warning(f"Invalid JSON line in response: {line}")
-        #             continue
-
-        # # Save Q&A as a note if there's an answer
-        # if answer.strip():
-        #     try:
-        #         note_text = f"Q: {question}\nA: {answer}"
-        #         create_note(note_text)
-        #     except Exception as e:
-        #         logger.error(f"Error saving note: {e}")
-
         # return {"reply": answer.strip() or "Không tạo được câu trả lời từ tài liệu."}
         api_key = os.getenv("GEMINI_API_KEY")
-        result = query_gemini_api(question, api_key)
+        result = query_gemini_api(prompt, api_key)
+        # Save Q&A as a note if there's an answer
+        if result["reply"]:
+            try:
+                note_text = f"Q: {prompt}\nA: {result['reply']}"
+                create_note(note_text)
+            except Exception as e:
+                logger.error(f"Error saving note: {e}")
         return {"reply": result["reply"]}
 
     except Exception as e:
