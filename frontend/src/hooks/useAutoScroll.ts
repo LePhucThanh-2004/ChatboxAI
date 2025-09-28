@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const useAutoScroll = (dependency: any[]) => {
+const useAutoScroll = (dependency = []) => {
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {

@@ -1,9 +1,13 @@
 import React from 'react';
-import './ChatWindow.css'; // Assuming you have a CSS file for styling
+// import './ChatWindow.css'; // Assuming you have a CSS file for styling
 import Message from './Message';
-import { useAutoScroll } from '../hooks/useAutoScroll';
+import useAutoScroll from '../hooks/useAutoScroll';
 
-const ChatWindow = ({ messages }) => {
+interface IChatWindowProps {
+    messages: { msg: string; index: number }[];
+}
+
+const ChatWindow = ({ messages }: IChatWindowProps) => {
     const chatRef = useAutoScroll();
 
     return (
