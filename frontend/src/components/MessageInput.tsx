@@ -1,11 +1,16 @@
+import { IMessage } from '@/types';
 import React, { useState } from 'react';
 
-const MessageInput: React.FC<{ onSend: (message: string) => void }> = ({ onSend }) => {
+const MessageInput: React.FC<{ onSend: (message: IMessage) => void }> = ({ onSend }) => {
     const [inputValue, setInputValue] = useState('');
 
     const handleSend = () => {
         if (inputValue.trim()) {
-            onSend(inputValue);
+            onSend({id: Date.now().toString(), content: inputValue, sender: {
+                type: 'user',
+                id: '',
+                name: ''
+            }, timestamp: new Date()});
             setInputValue('');
         }
     };

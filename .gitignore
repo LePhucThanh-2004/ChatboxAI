@@ -16,3 +16,4 @@ backend/__pycache__/main.cpython-313.pyc
 backend/__pycache__/models.cpython-313.pyc
 backend/__pycache__/nlp.cpython-313.pyc
 backend/__pycache__/scheduler.cpython-313.pyc
+backend/.env
