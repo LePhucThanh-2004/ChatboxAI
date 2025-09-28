@@ -18,7 +18,7 @@ const App: React.FC = () => {
     return (
         <div className="app-container">
             <Sidebar />
-            <ChatWindow messages={messages} />
+            <ChatWindow messages={messages}  />
             {loading && <LoadingSpinner />}
             <MessageInput onSend={handleSendMessage} />
         </div>

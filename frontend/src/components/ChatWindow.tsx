@@ -4,7 +4,7 @@ import Message from './Message';
 import useAutoScroll from '../hooks/useAutoScroll';
 import { IMessage } from '@/types';
 
-const ChatWindow: React.FC<IMessage[]> = () => {
+const ChatWindow: React.FC<{messages: IMessage[]}> = ({messages}) => {
     const chatRef = useAutoScroll();
 
     return (
