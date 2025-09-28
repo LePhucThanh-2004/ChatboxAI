@@ -79,7 +79,7 @@ init_db_tables()
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.getenv("FRONTEND_ORIGIN", "http://localhost:8080")],  # Use env or default
+    allow_origins=[os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")],  # Use env or default
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,  # Only if you need cookies/auth headers
